@@ -261,7 +261,7 @@ def simplify_bubbles(graph: DiGraph) -> DiGraph:
         predecessors = list(graph.predecessors(n))
         if len(predecessors) > 1:
             for i, j in combinations(predecessors, 2):
-                ancestor = nx.lowest_common_ancestor(graph, i, j)
+                ancestor = lowest_common_ancestor(graph, i, j)
                 if ancestor != None:
                     bubble = True
                     break
