@@ -247,7 +247,7 @@ def solve_bubble(graph: DiGraph, ancestor_node: str, descendant_node: str) -> Di
     :return: (nx.DiGraph) A directed graph object
     """
     # Calculate paths, weights and lengths
-    possible_paths = all_simple_paths(graph, ancestor_node, descendant_node)
+    possible_paths = list(all_simple_paths(graph, ancestor_node, descendant_node))
     path_lengths = [len(path) for path in possible_paths]
     path_weights = [path_average_weight(graph, path) for path in possible_paths]
 
@@ -264,7 +264,25 @@ def simplify_bubbles(graph: DiGraph) -> DiGraph:
     :param graph: (nx.DiGraph) A directed graph object
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    bubble = False
+    for n in graph.nodes:
+        predecessors = list(graph.predecessors(n))
+        if len(predecessors) > 1:
+            for i in range(len(predecessors)-1):
+                for j in range(i+1, len(predecessors)):
+                    ancestor = lowest_common_ancestor(graph, predecessors[i], predecessors[j])
+                    if ancestor != None:
+                        bubble = True
+                        break
+
+        if bubble == True:
+            chosen_node = n
+            break
+    
+    if bubble:
+        graph = simplify_bubbles(solve_bubble(graph, ancestor, chosen_node))
+
+    return graph
 
 
 def solve_entry_tips(graph: DiGraph, starting_nodes: List[str]) -> DiGraph:
