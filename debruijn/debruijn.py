@@ -128,7 +128,6 @@ def cut_kmer(read: str, kmer_size: int) -> Iterator[str]:
 #     for kmer in cut_kmer(sequence, 4):
 #         print(kmer)
 
-
 def build_kmer_dict(fastq_file: Path, kmer_size: int) -> Dict[str, int]:
     """Build a dictionnary object of all kmer occurrences in the fastq file
 
@@ -222,17 +221,9 @@ def select_best_path(
     # Remove best path from the list
     del path_list[best_path]
 
-
     # Remove remaining paths
     graph = remove_paths(graph, path_list, delete_entry_node, delete_sink_node)
     return graph
-
-
-
-
-
-
-    
 
 
 def path_average_weight(graph: DiGraph, path: List[str]) -> float:
@@ -255,7 +246,16 @@ def solve_bubble(graph: DiGraph, ancestor_node: str, descendant_node: str) -> Di
     :param descendant_node: (str) A downstream node in the graph
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    # Calculate paths, weights and lengths
+    possible_paths = all_simple_paths(graph, ancestor_node, descendant_node)
+    path_lengths = [len(path) for path in possible_paths]
+    path_weights = [path_average_weight(graph, path) for path in possible_paths]
+
+    # Select the best
+    graph = select_best_path(graph, possible_paths, path_lengths, 
+                             path_weights)
+
+    return graph
 
 
 def simplify_bubbles(graph: DiGraph) -> DiGraph:
