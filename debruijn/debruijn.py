@@ -296,7 +296,7 @@ def solve_entry_tips(graph: DiGraph, starting_nodes: List[str]) -> DiGraph:
     
     for n in graph.nodes:
         predecessors = list(graph.predecessors(n))
-        if len(predecessors) >= 2:
+        if len(predecessors) > 1:
             entry_tip = True
 
         if entry_tip:
@@ -311,16 +311,13 @@ def solve_entry_tips(graph: DiGraph, starting_nodes: List[str]) -> DiGraph:
                         lengths = len(p)
                         path_weights.append(weights)
                         path_lengths.append(lengths)
-            
-            graph = select_best_path(graph, list(possible_paths), path_weights, path_lengths)
-            return solve_entry_tips(graph, get_starting_nodes(graph))
-    
-    return graph
+                        all_paths.append(p)
 
+            if len(all_paths) > 1:
+                graph = select_best_path(graph, all_paths, path_weights, path_lengths,
+                                         True, False)
+                return solve_entry_tips(graph, get_starting_nodes(graph))
     
-    if entry_tip:
-        graph = simplify_bubbles(solve_bubble(graph, ancestor, chosen_node))
-
     return graph
 
 
@@ -331,7 +328,34 @@ def solve_out_tips(graph: DiGraph, ending_nodes: List[str]) -> DiGraph:
     :param ending_nodes: (list) A list of ending nodes
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    out_tip = False
+    
+    for n in graph.nodes:
+        predecessors = list(graph.successors(n))
+        if len(predecessors) > 1:
+            out_tip = True
+
+        if out_tip:
+            all_paths = []
+            path_weights = []
+            path_lengths = []
+            for end in ending_nodes:
+                if has_path(graph, n, end):
+                    possible_paths = all_simple_paths(graph, n, end)
+                    for p in possible_paths:
+                        weights = path_average_weight(graph, p)
+                        lengths = len(p)
+                        path_weights.append(weights)
+                        path_lengths.append(lengths)
+                        all_paths.append(p)
+
+            if len(all_paths) > 1:
+                graph = select_best_path(graph, all_paths, path_weights, path_lengths,
+                                         False, True)
+                return solve_out_tips(graph, get_sink_nodes(graph))
+    
+    return graph
+
 
 
 def get_starting_nodes(graph: DiGraph) -> List[str]:
