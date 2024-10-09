@@ -177,7 +177,7 @@ def remove_paths(
     :param delete_sink_node: (boolean) True->We remove the last node of a path
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    
 
 
 def select_best_path(
@@ -304,7 +304,11 @@ def save_contigs(contigs_list: List[str], output_file: Path) -> None:
     :param contig_list: (list) List of [contiguous sequence and their length]
     :param output_file: (Path) Path to the output file
     """
-    pass
+    with open(output_file, 'w') as filin:
+        for i, contigs in enumerate(contigs_list):
+            filin.write(f'>contig_{i} len={contigs[1]}\n')
+            filin.write(textwrap.fill(contigs[0], width=80))
+            filin.write('\n')
 
 
 def draw_graph(graph: DiGraph, graphimg_file: Path) -> None:  # pragma: no cover
@@ -347,7 +351,7 @@ def main() -> None:  # pragma: no cover
 
     test_dico = build_kmer_dict(fastq_file, kmer_size)
 
-    # Build graphs
+    # Build graphs and save contigs
     test_graph = build_graph(test_dico)
     
     starts = get_starting_nodes(test_graph)
@@ -355,7 +359,8 @@ def main() -> None:  # pragma: no cover
     ends = get_sink_nodes(test_graph)
 
     res = get_contigs(test_graph, starts, ends)
-    print(res)
+
+    save_contigs(res, 'tests/testing_save_contig.txt')
     
 
 
