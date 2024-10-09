@@ -31,6 +31,7 @@ import matplotlib
 from operator import itemgetter
 import random
 from collections import defaultdict
+from itertools import combinations
 
 random.seed(9001)
 from random import randint
@@ -111,10 +112,6 @@ def read_fastq(fastq_file: Path) -> Iterator[str]:
     for i in range(max_length):
         yield lines[i*4 + 1].strip()
 
-    
-# for sequence in read_fastq(Path("../data/eva71_two_reads.fq")):
-#     print(sequence)
-
 
 def cut_kmer(read: str, kmer_size: int) -> Iterator[str]:
     """Cut read into kmers of size kmer_size.
@@ -125,9 +122,6 @@ def cut_kmer(read: str, kmer_size: int) -> Iterator[str]:
     for i, pos in enumerate(read[:-kmer_size + 1]):
         yield read[i:i+kmer_size]
 
-# for sequence in read_fastq(Path("../data/eva71_two_reads.fq")):
-#     for kmer in cut_kmer(sequence, 4):
-#         print(kmer)
 
 def build_kmer_dict(fastq_file: Path, kmer_size: int) -> Dict[str, int]:
     """Build a dictionnary object of all kmer occurrences in the fastq file
@@ -144,8 +138,6 @@ def build_kmer_dict(fastq_file: Path, kmer_size: int) -> Dict[str, int]:
 
     return kmer_dict
 
-# test = build_kmer_dict(Path("data/eva71_two_reads.fq"), 3)
-# print(test.keys())
 
 def build_graph(kmer_dict: Dict[str, int]) -> DiGraph:
     """Build the debruijn graph
@@ -159,7 +151,6 @@ def build_graph(kmer_dict: Dict[str, int]) -> DiGraph:
         graph.add_edge(key[:-1], key[1:], weight = kmer_dict[key])
 
     return graph
-
 
 
 def remove_paths(
@@ -269,12 +260,11 @@ def simplify_bubbles(graph: DiGraph) -> DiGraph:
     for n in graph.nodes:
         predecessors = list(graph.predecessors(n))
         if len(predecessors) > 1:
-            for i in range(len(predecessors)-1):
-                for j in range(i+1, len(predecessors)):
-                    ancestor = lowest_common_ancestor(graph, predecessors[i], predecessors[j])
-                    if ancestor != None:
-                        bubble = True
-                        break
+            for i, j in combinations(predecessors, 2):
+                ancestor = nx.lowest_common_ancestor(graph, i, j)
+                if ancestor != None:
+                    bubble = True
+                    break
 
         if bubble == True:
             chosen_node = n
@@ -332,8 +322,8 @@ def solve_out_tips(graph: DiGraph, ending_nodes: List[str]) -> DiGraph:
     out_tip = False
     
     for n in graph.nodes:
-        predecessors = list(graph.successors(n))
-        if len(predecessors) > 1:
+        successors = list(graph.successors(n))
+        if len(successors) > 1:
             out_tip = True
 
         if out_tip:
@@ -449,32 +439,36 @@ def main() -> None:  # pragma: no cover
     # Get arguments
     args = get_arguments()
 
-    # Testing 
+    # Recover arguments
     fastq_file = args.fastq_file
     kmer_size = args.kmer_size
 
-    test_dico = build_kmer_dict(fastq_file, kmer_size)
+    # Build graph and save contigs
+    dico = build_kmer_dict(fastq_file, kmer_size)
+    graph = build_graph(dico)
 
-    # Build graphs and save contigs
-    test_graph = build_graph(test_dico)
-    
-    starts = get_starting_nodes(test_graph)
+    # Bubbles and Tips
+    graph = simplify_bubbles(graph)
 
-    ends = get_sink_nodes(test_graph)
+    graph = solve_entry_tips(graph, get_starting_nodes(graph))
+    graph = solve_out_tips(graph, get_sink_nodes(graph))
 
-    res = get_contigs(test_graph, starts, ends)
+    # Final starting and ending nodes
+    starting_nodes = get_starting_nodes(graph)
+    sink_nodes = get_sink_nodes(graph)
 
-    save_contigs(res, 'tests/testing_save_contig.txt')
-    
+    # Write contigs
+    contigs = get_contigs(graph, starting_nodes, sink_nodes)
 
-
+    # Sauvegarde des contigs dans fichier
+    save_contigs(contigs, Path('tests/testing_save_contig.txt'))
 
     # Fonctions de dessin du graphe
     # A decommenter si vous souhaitez visualiser un petit
     # graphe
     # Plot the graph
-    # if args.graphimg_file:
-    #     draw_graph(graph, args.graphimg_file)
+    if args.graphimg_file:
+        draw_graph(graph, args.graphimg_file)
 
 
 if __name__ == "__main__":  # pragma: no cover
