@@ -284,12 +284,18 @@ def get_contigs(
     :param ending_nodes: (list) A list of nodes without successors
     :return: (list) List of [contiguous sequence and their length]
     """
+    contigs = []
     for start in starting_nodes:
         for end in ending_nodes:
             if has_path(graph, start, end):
-                res = all_simple_paths(graph, start, end)
-
-                
+                for path in all_simple_paths(graph, start, end):
+                    contig = path[0]
+                    path = path[1:]
+                    for kmer in path:
+                        contig += kmer[-1]
+                    contigs.append((contig, len(contig)))
+    
+    return contigs
 
 
 def save_contigs(contigs_list: List[str], output_file: Path) -> None:
@@ -349,6 +355,7 @@ def main() -> None:  # pragma: no cover
     ends = get_sink_nodes(test_graph)
 
     res = get_contigs(test_graph, starts, ends)
+    print(res)
     
 
 
