@@ -29,6 +29,7 @@ from networkx import (
 import matplotlib
 from operator import itemgetter
 import random
+from collections import defaultdict
 
 random.seed(9001)
 from random import randint
@@ -134,8 +135,17 @@ def build_kmer_dict(fastq_file: Path, kmer_size: int) -> Dict[str, int]:
     :param fastq_file: (str) Path to the fastq file.
     :return: A dictionnary object that identify all kmer occurrences.
     """
-    # Read fastq file
-    
+    # Initialize dictionnary
+    kmer_dict = defaultdict(int)
+
+    for sequence in read_fastq(Path("../data/eva71_two_reads.fq")):
+        for kmer in cut_kmer(sequence, kmer_size):
+            kmer_dict[kmer] += 1
+
+    return kmer_dict
+
+# test = build_kmer_dict(Path("../data/eva71_two_reads.fq"), 5)
+# print(test['CACCA'])
 
 
 def build_graph(kmer_dict: Dict[str, int]) -> DiGraph:
@@ -144,7 +154,14 @@ def build_graph(kmer_dict: Dict[str, int]) -> DiGraph:
     :param kmer_dict: A dictionnary object that identify all kmer occurrences.
     :return: A directed graph (nx) of all kmer substring and weight (occurrence).
     """
-    pass
+    graph = DiGraph()
+
+    for key in kmer_dict:
+        graph.add_edge(key[:-1], key[1:], weight = kmer_dict[key])
+
+    return graph
+
+
 
 
 def remove_paths(
@@ -311,6 +328,19 @@ def main() -> None:  # pragma: no cover
     """
     # Get arguments
     args = get_arguments()
+
+    # Testing 
+    fastq_file = args.fastq_file
+    kmer_size = args.kmer_size
+
+    test_dico = build_kmer_dict(fastq_file, kmer_size)
+
+    # Build graphs
+    test_graph = build_graph(test_dico)
+    print(test_graph)
+    
+
+
 
     # Fonctions de dessin du graphe
     # A decommenter si vous souhaitez visualiser un petit
