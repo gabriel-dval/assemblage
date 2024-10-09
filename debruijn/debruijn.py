@@ -293,15 +293,30 @@ def solve_entry_tips(graph: DiGraph, starting_nodes: List[str]) -> DiGraph:
     :return: (nx.DiGraph) A directed graph object
     """
     entry_tip = False
+    
     for n in graph.nodes:
         predecessors = list(graph.predecessors(n))
-        
-                        entry_tip = True
-                        break
+        if len(predecessors) >= 2:
+            entry_tip = True
 
-        if entry_tip == True:
-            chosen_node = n
-            break
+        if entry_tip:
+            all_paths = []
+            path_weights = []
+            path_lengths = []
+            for start in starting_nodes:
+                if has_path(graph, start, n):
+                    possible_paths = all_simple_paths(graph, start, n)
+                    for p in possible_paths:
+                        weights = path_average_weight(graph, p)
+                        lengths = len(p)
+                        path_weights.append(weights)
+                        path_lengths.append(lengths)
+            
+            graph = select_best_path(graph, list(possible_paths), path_weights, path_lengths)
+            return solve_entry_tips(graph, get_starting_nodes(graph))
+    
+    return graph
+
     
     if entry_tip:
         graph = simplify_bubbles(solve_bubble(graph, ancestor, chosen_node))
