@@ -1,3 +1,5 @@
 __py_cache__
 *.pyc
 .coverage
+tests/*.txt
+tests/*.fna
