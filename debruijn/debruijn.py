@@ -121,7 +121,7 @@ def cut_kmer(read: str, kmer_size: int) -> Iterator[str]:
     :param read: (str) Sequence of a read.
     :return: A generator object that provides the kmers (str) of size kmer_size.
     """
-    for i, pos in enumerate(read[:-kmer_size]):
+    for i, pos in enumerate(read[:-kmer_size + 1]):
         yield read[i:i+kmer_size]
 
 # for sequence in read_fastq(Path("../data/eva71_two_reads.fq")):
@@ -138,15 +138,14 @@ def build_kmer_dict(fastq_file: Path, kmer_size: int) -> Dict[str, int]:
     # Initialize dictionnary
     kmer_dict = defaultdict(int)
 
-    for sequence in read_fastq(Path("../data/eva71_two_reads.fq")):
+    for sequence in read_fastq(fastq_file):
         for kmer in cut_kmer(sequence, kmer_size):
             kmer_dict[kmer] += 1
 
     return kmer_dict
 
-# test = build_kmer_dict(Path("../data/eva71_two_reads.fq"), 5)
-# print(test['CACCA'])
-
+# test = build_kmer_dict(Path("data/eva71_two_reads.fq"), 3)
+# print(test.keys())
 
 def build_graph(kmer_dict: Dict[str, int]) -> DiGraph:
     """Build the debruijn graph
@@ -160,7 +159,6 @@ def build_graph(kmer_dict: Dict[str, int]) -> DiGraph:
         graph.add_edge(key[:-1], key[1:], weight = kmer_dict[key])
 
     return graph
-
 
 
 
@@ -261,7 +259,8 @@ def get_starting_nodes(graph: DiGraph) -> List[str]:
     :param graph: (nx.DiGraph) A directed graph object
     :return: (list) A list of all nodes without predecessors
     """
-    pass
+    no_predecessors = [n for n in graph.nodes if len(list(graph.predecessors(n))) == 0]
+    return no_predecessors
 
 
 def get_sink_nodes(graph: DiGraph) -> List[str]:
@@ -270,7 +269,9 @@ def get_sink_nodes(graph: DiGraph) -> List[str]:
     :param graph: (nx.DiGraph) A directed graph object
     :return: (list) A list of all nodes without successors
     """
-    pass
+    no_successors = [n for n in graph.nodes if len(list(graph.successors(n))) == 0]
+    return no_successors
+    
 
 
 def get_contigs(
@@ -337,7 +338,12 @@ def main() -> None:  # pragma: no cover
 
     # Build graphs
     test_graph = build_graph(test_dico)
-    print(test_graph)
+    
+    test_predecessors = get_starting_nodes(test_graph)
+    print(test_predecessors)
+
+    test_predecessors = get_sink_nodes(test_graph)
+    print(test_predecessors)
     
 
 
