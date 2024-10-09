@@ -104,14 +104,14 @@ def read_fastq(fastq_file: Path) -> Iterator[str]:
     """
     file = open(fastq_file)
     lines = file.readlines()
-
     max_length = len(lines) // 4 # Reads are in blocks of 4
 
-    # List containing all seqs
-    seqs = [lines[i*4 + 2] for i in range(max_length)]
+    for i in range(max_length):
+        yield lines[i*4 + 1].strip()
 
     
-
+# for sequence in read_fastq(Path("../data/eva71_two_reads.fq")):
+#     print(sequence)
 
 
 def cut_kmer(read: str, kmer_size: int) -> Iterator[str]:
@@ -120,7 +120,12 @@ def cut_kmer(read: str, kmer_size: int) -> Iterator[str]:
     :param read: (str) Sequence of a read.
     :return: A generator object that provides the kmers (str) of size kmer_size.
     """
-    pass
+    for i, pos in enumerate(read[:-kmer_size]):
+        yield read[i:i+kmer_size]
+
+# for sequence in read_fastq(Path("../data/eva71_two_reads.fq")):
+#     for kmer in cut_kmer(sequence, 4):
+#         print(kmer)
 
 
 def build_kmer_dict(fastq_file: Path, kmer_size: int) -> Dict[str, int]:
@@ -129,7 +134,8 @@ def build_kmer_dict(fastq_file: Path, kmer_size: int) -> Dict[str, int]:
     :param fastq_file: (str) Path to the fastq file.
     :return: A dictionnary object that identify all kmer occurrences.
     """
-    pass
+    # Read fastq file
+    
 
 
 def build_graph(kmer_dict: Dict[str, int]) -> DiGraph:
