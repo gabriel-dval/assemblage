@@ -26,6 +26,7 @@ from networkx import (
     draw,
     spring_layout,
 )
+import networkx as nx
 import matplotlib
 from operator import itemgetter
 import random
@@ -355,7 +356,6 @@ def solve_out_tips(graph: DiGraph, ending_nodes: List[str]) -> DiGraph:
                 return solve_out_tips(graph, get_sink_nodes(graph))
     
     return graph
-
 
 
 def get_starting_nodes(graph: DiGraph) -> List[str]:
