@@ -292,7 +292,21 @@ def solve_entry_tips(graph: DiGraph, starting_nodes: List[str]) -> DiGraph:
     :param starting_nodes: (list) A list of starting nodes
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    entry_tip = False
+    for n in graph.nodes:
+        predecessors = list(graph.predecessors(n))
+        
+                        entry_tip = True
+                        break
+
+        if entry_tip == True:
+            chosen_node = n
+            break
+    
+    if entry_tip:
+        graph = simplify_bubbles(solve_bubble(graph, ancestor, chosen_node))
+
+    return graph
 
 
 def solve_out_tips(graph: DiGraph, ending_nodes: List[str]) -> DiGraph:
